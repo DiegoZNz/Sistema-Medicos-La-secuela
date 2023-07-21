@@ -15,7 +15,7 @@ mysql= MySQL(app)
 
 @app.route('/')
 def index(): #metodo index
-    return render_template('main.html') #el metodo index nos lleva a LOGIN.html
+    return render_template('login.html') #el metodo index nos lleva a LOGIN.html
 
 @app.route('/diagnosticos')
 def diagnosticos():
