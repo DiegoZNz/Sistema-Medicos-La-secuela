@@ -9,7 +9,7 @@ app = Flask(__name__, static_folder='static')
 app.config['MYSQL_HOST']='localhost'
 app.config['MYSQL_USER']='root'
 app.config['MYSQL_PASSWORD']=''
-app.config['MYSQL_DB']='medsys' 
+app.config['MYSQL_DB']='medsys'
 app.secret_key='mysecretkey'
 mysql= MySQL(app)
 
