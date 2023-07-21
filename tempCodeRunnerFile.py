@@ -17,6 +17,11 @@ mysql= MySQL(app)
 def index(): #metodo index
     return render_template('main.html') #el metodo index nos lleva a LOGIN.html
 
+@app.route('/main')
+def main(): #metodo main
+    return render_template('main.html') #el metodo nos lleva al main
+#ruta http://localhost:5000/guardar tipo POST para Insert
+
 @app.route('/diagnosticos')
 def diagnosticos():
     return render_template('diagnosticos.html')
