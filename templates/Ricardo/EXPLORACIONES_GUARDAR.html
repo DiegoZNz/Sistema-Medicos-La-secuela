@@ -1,0 +1,44 @@
+
+{% extends 'plantilla.html' %}
+
+{% block body %}
+
+<h1>INGRESAR EXPLORACIÓN</h1>
+<form action="/GUARDAR_EXPLORACIONES" method="POST">
+
+    <label>Id de paciente</label>
+    <select name="txtPaciente_id" required>
+        {% for Nom in nombres %}
+            <option>{{Nom.0}}</option>
+        {% endfor %}
+    </select>
+    
+    <br>
+    <label>Fecha</label>
+    <input type="date" name="txtFecha" placeholder="Escribe una fecha" required>
+    <br>
+    <label>Peso(KG)</label>
+    <input type="number" step="0.01" name="txtPeso" placeholder="Escribe el peso en kg" required>
+    <br>
+    <label>Altura(M)</label>
+    <input type="number" step="0.01" name="txtAltura" placeholder="Escribe la altura en Metros" required>
+    <br>
+    <label>Temperatura(C°)</label>
+    <input type="number" step="0.01" name="txtTemperatura" placeholder="Escribe la temperatura en grados centigrados" required>
+    <br>
+    <label>Latidos(Veces por minuto)</label>
+    <input type="number" step="0.01" name="txtLatidos" placeholder="Escribe cuantos latidos por minuto se registran" required>
+    <br>
+    <label>Glucosa(mg/dl)</label>
+    <input type="number" step="0.01" name="txtGlucosa" placeholder="Escribe la cantidad de glucosa" required>
+    <br>
+    <label>Oxigeno(%)</label>
+    <input type="number" step="0.01" name="txtOxigeno" placeholder="Escribe el porcentaje de oxigeno" required>
+    <br>    
+    <button type="submit">Guardar</button>
+</form>
+
+
+
+
+{% endblock %}

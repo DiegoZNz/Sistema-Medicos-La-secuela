@@ -14,29 +14,27 @@
         </div>
         <div class="col-md-8 col-lg-6 col-xl-4 offset-xl-1">
 
-          <form method="POST">
+          {% with mensajes = get_flashed_messages() %}
+    {% if mensajes %}
+        {% for msj in mensajes %}
+            <h5>{{msj}}</h5>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+          <form method="POST" action="acceso-login">
             <!-- Email input -->
             <div class="form-outline mb-4">
-              <label class="form-label" for="form3Example3">Dirección de correo</label>
-              <input type="email" id="form3Example3" class="form-control form-control-lg"
-                placeholder="Ingresa un correo valido" required/>
+              <label class="form-label" for="form3Example3">RFC</label>
+              <input type="text" id="form3Example3" class="form-control form-control-lg"
+                placeholder="Ingresa tu RFC" name="txtRfc" required/>
             </div>
   
             <!-- Password input -->
             <div class="form-outline mb-3">
               <label class="form-label" for="form3Example4">Contraseña</label>
               <input type="password" id="form3Example4" class="form-control form-control-lg"
-                placeholder="Ingresa la contraseña" required/>
-            </div>
-  
-            <div class="d-flex justify-content-between align-items-center">
-              <!-- Checkbox -->
-              <div class="form-check mb-0">
-                <input class="form-check-input me-2" type="checkbox" value="" id="form2Example3" />
-                <label class="form-check-label" for="form2Example3">
-                  Recuérdame
-                </label>
-              </div>
+                placeholder="Ingresa la contraseña" name="txtPassword" required/>
             </div>
   
             <div class="text-center text-lg-start mt-4 pt-2">
