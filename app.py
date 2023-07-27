@@ -86,7 +86,10 @@ def EXPLORACIONES():
 @app.route('/EXPLORACIONES_GUARDAR')
 def EXPLORACIONES_GUARDAR():
     CC1=mysql.connection.cursor()
-    CC1.execute('SELECT id, nombre, ap, am from pacientes where medico_id=%s order by nombre asc', (IDMED,))
+    if RMED==1:
+        CC1.execute('SELECT id, nombre, ap, am from pacientes where medico_id=%s', (IDMED,))
+    else:
+        CC1.execute('SELECT id, nombre, ap, am from pacientes')
     conExploracionesDropdown=CC1.fetchall()
     return render_template('Ricardo/EXPLORACIONES_GUARDAR.HTML', nombres=conExploracionesDropdown)
 
