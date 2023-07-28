@@ -309,6 +309,24 @@ def GUARDAR_PACIENTES():
 
 ###########################################   PACIENTES   #####################################################
 
+###########################################   Enfermedades   #####################################################
+@app.route('/addEnfermedades')
+def addEnfermedades():
+    return render_template('addEnfermedades.html')
+
+# Agregar un nueva nueva enfermedad al catalogo de enfermedades
+@app.route('/guardarEnfermedad', methods=['POST'])
+def guardarEnfermedad():
+    if request.method == 'POST':
+        # pasamos a variables el contenido de los input
+        vnombre = request.form['txtnombre']
+        CSGE = mysql.connection.cursor()  # objeto de tipo cursor
+        CSGE.execute('INSERT INTO enfermedades ( nombre) VALUES (%s)', ( vnombre,))
+        mysql.connection.commit()
+    flash('Enfermedad registrada exitosamente')
+    return redirect(url_for('addEnfermedades'))
+
+###########################################   Enfermedades   #####################################################
 
 
 
