@@ -1,0 +1,34 @@
+{% extends 'plantilla.html' %}
+
+{% block body %}
+    <div style="margin-top:1cm; text-align: center;">
+        <table class="table  table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Paciente</th>
+                    <th scope="col">Estudio medico</th>
+                    <th scope="col">Descripción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for estudios in listEstudios %}
+                    <tr>
+                        <td>{{ estudios[0] }}</td>
+                        <td>{{ estudios[1] }}</td>
+                        <td>{{ estudios[2] }}</td>
+                        <td>{{ estudios[3] }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+        
+    <!-- Footer -->
+    <footer class="footer bg-light text-white mt-5 d-flex flex-column flex-md-row  text-md-start justify-content-between py-4 px-4 px-xl-5 ">
+        <div class="container text-dark mb-3 mb-md-0" style="text-align: center;">
+        <span>© 2023 Sistema Medico.</span>
+        </div>
+    </footer>
+    
+{% endblock %}
