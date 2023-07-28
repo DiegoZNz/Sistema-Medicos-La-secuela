@@ -27,12 +27,26 @@
         <tbody>
           {% for pac in listPacientes %}
                 <tr>
-                    <td> {{pac.0}} {{pac.1}} {{pac.2}} </td>
-                    <td> {{pac.3}} {{pac.4}} {{pac.5}}</td>
-                    <td> {{pac.6}} </td>
+                    <td> {{pac.1}} {{pac.2}} {{pac.3}} </td>
+                    <td> {{pac.4}} {{pac.5}} {{pac.6}}</td>
                     <td> {{pac.7}} </td>
                     <td> {{pac.8}} </td>
                     <td> {{pac.9}} </td>
+                    <td> {{pac.10}} </td>
+
+                    <td>
+
+                        {% if rolMedico==1 %}
+                            <a href=/PACIENTES_EDITAR/{{pac.0}}>Editar</a>
+                        {% endif %}
+
+                        {% if rolMedico==2 %}
+                            <a href=/PACIENTES_EDITAR/{{pac.0}}>Editar</a>
+                            <a href=/PACIENTES_BORRAR/{{pac.0}}>Borrar</a>
+                        {% endif %}
+    
+                    </td>
+
                 </tr>
             {% endfor %}
         </tbody>

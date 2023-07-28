@@ -17,6 +17,9 @@
     <table>
         <thead>
             <tr>
+                {% if rolMedico==2 %}
+                    <td>Medico Responsable</td>
+                {% endif %}
                 <td>Nombre del paciente</td>
                 <td>Edad</td>
                 <td>Fecha</td>
@@ -31,8 +34,12 @@
         <tbody>
           {% for exp in listExploraciones %}
                 <tr>
-                    <td> {{exp.0}} {{exp.1}} {{exp.2}} </td>
-                    <td> {{exp.3}} </td>
+
+                    {% if rolMedico==2 %}
+                        <td> {{exp.12}} {{exp.13}} {{exp.14}} </td>
+                    {% endif %}
+
+                    <td> {{exp.1}} {{exp.2}} {{exp.3}} </td>
                     <td> {{exp.4}} </td>
                     <td> {{exp.5}} </td>
                     <td> {{exp.6}} </td>
@@ -40,10 +47,25 @@
                     <td> {{exp.8}} </td>
                     <td> {{exp.9}} </td>
                     <td> {{exp.10}} </td>
+                    <td> {{exp.11}} </td>
+                    <td>
+
+                    {% if rolMedico==1 %}
+                        <a href=/EXPLORACIONES_EDITAR/{{exp.0}}>Editar</a>
+                    {% endif %}
+
+                    {% if rolMedico==2 %}
+                        <a href=/EXPLORACIONES_EDITAR/{{exp.0}}>Editar</a>
+                        <a href=/EXPLORACIONES_BORRAR/{{exp.0}}>Borrar</a>
+                    {% endif %}
+
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>
+        
     </table>
 
+    
 
   {% endblock %}

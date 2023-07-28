@@ -24,11 +24,19 @@
     <input type="text" name="txtAntecedentes" placeholder="Escribe los antecedentes" value="N/A" required>
     <br>
     <label>Enfermedad</label>
-    <input type="number" name="txtEnfermedad" placeholder="Referencia a la enfermedad" value="32" required>
+    <select name="txtMedico" required>
+        {% for enfermedadID in enfermedades %}
+            <option>{{enfermedadID.0}}</option>
+        {% endfor %}
+    </select>
     <br>
-    {% if ROLMEDICO==2 %}
+    {% if rolMedico==2 %}
     <label>Medico</label>
-    <input type="number" name="txtMedico" placeholder="Referencia al medico" required>
+    <select name="txtMedico" required>
+        {% for med in medicosid %}
+            <option>{{med.0}}</option>
+        {% endfor %}
+    </select>
     <br>
     {% endif %}    
     <button type="submit">Guardar</button>
