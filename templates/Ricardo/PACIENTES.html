@@ -1,0 +1,41 @@
+
+{% extends 'plantilla.html' %}
+
+{% block body %}
+
+<h1>PACIENTES</h1>  
+{% with mensajes = get_flashed_messages() %}
+    {% if mensajes %}
+        {% for msj in mensajes %}
+            <h5>{{msj}}</h5>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+<a href="/PACIENTES_GUARDAR">Ingresar Paciente</a>
+
+    <table>
+        <thead>
+            <tr>
+                <td>Nombre del paciente</td>
+                <td>Medico que atiende</td>
+                <td>Fecha de Nacimiento</td>
+                <td>Alergias</td>
+                <td>Antecedentes</td>
+                <td>Enfermedad</td>
+            </tr>
+        </thead>
+        <tbody>
+          {% for pac in listPacientes %}
+                <tr>
+                    <td> {{pac.0}} {{pac.1}} {{pac.2}} </td>
+                    <td> {{pac.3}} {{pac.4}} {{pac.5}}</td>
+                    <td> {{pac.6}} </td>
+                    <td> {{pac.7}} </td>
+                    <td> {{pac.8}} </td>
+                    <td> {{pac.9}} </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}
