@@ -18,34 +18,7 @@ mysql= MySQL(app)
 @app.route('/')
 def index():
     return render_template('login.html')
-
-#---------------------------------------------------------------------------------------------------------------------------------------
-
-@app.route('/exploraciones')
-def exploraciones():
-    return render_template('exploraciones.html')
-
-@app.route('/pacientes')
-def pacientes():
-    return render_template('pacientes.html')
-
-@app.route('/pacientesguardar', methods=['POST'])
-def pacientesguardar():
-    if request.method == 'POST':
-        # pasamos a variables el contenido de los input
-        Vnombre= request.form['txtnombre']
-        Vap= request.form['txtap']
-        Vam= request.form['txtam']
-        Vfechanac=request.form['txtfechanac']
-        Videnfermedad=request.form['txtidenfermedad']
-        Vantecedentes=request.form['txtantecedentes']
-        # Conectar y ejecutar el insert
-        CS = mysql.connection.cursor() # objeto de tipo cursor
-        CS.execute('insert into pacientes (nombre, ap, am, fechanac, antecedentes, id_enfermedad_tipo) values (%s, %s, %s, %s, %s, %s)',(Vnombre, Vap, Vam, Vfechanac, Vantecedentes, Videnfermedad))
-        mysql.connection.commit()
-    flash('El paciente fue agregado correctamente')
-    return redirect(url_for('pacientes'))    
-
+  
 ###########################################   MEDICOS   #####################################################
 @app.route('/addmedicos')
 def addmedicos():
@@ -262,7 +235,8 @@ def estudios():
 
 ###########################################   ESTUDIOS   #####################################################
 
-#---------------------------------------------------------------Ricardo------------------------------------------------------------------------
+###########################################   EXPLORACIONES   #####################################################
+
 
 @app.route('/EXPLORACIONES')
 def EXPLORACIONES():
@@ -298,6 +272,10 @@ def GUARDAR_EXPLORACIONES():
     flash('La exploración fue agregada correctamente')
     return redirect(url_for('EXPLORACIONES'))
 
+###########################################   EXPLORACIONES   #####################################################
+
+###########################################   PACIENTES   #####################################################
+
 @app.route('/PACIENTES')
 def PACIENTES():
     CC=mysql.connection.cursor() 
@@ -329,9 +307,13 @@ def GUARDAR_PACIENTES():
     flash('El paciente fue agregado correctamente')
     return redirect(url_for('PACIENTES'))
 
-@app.route('/MEDICOS')
-def MEDICOS():
-    return render_template('Ricardo/MEDICOS.html', rolMedico=RMED, idmedico=IDMED)
+###########################################   PACIENTES   #####################################################
+
+
+
+
+###########################################   ACCESO LOGIN   #####################################################
+
 
 @app.route('/acceso-login', methods= ["POST", "GET"])
 def login():
@@ -368,6 +350,7 @@ def login():
         else:
             flash('Usuario O Contraseña Incorrectas')
             return render_template('login.html')
+###########################################   ACCESO LOGIN   #####################################################
 
 #ejecución del servidor en el puerto 5000
 if __name__ == '__main__':
