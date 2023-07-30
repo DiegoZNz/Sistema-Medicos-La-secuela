@@ -22,11 +22,21 @@
               
               <li class="nav-item dropdown ">
                 <a class="nav-link dropdown-toggle  " href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                {%if rolMedico==2 %}  
                   Medicos
+                {% endif %}
+                {%if rolMedico==1 %}
+                  Medico
+                {% endif %}
                 </a>
                 <ul class="dropdown-menu navbar-indigo">
-                  <li><a class="dropdown-item text-primary-emphasis" href="/medicos">Medicos</a></li>
-                  <li><a class="dropdown-item text-primary-emphasis" href="/addmedicos">Nuevo medico</a></li>
+                  {%if rolMedico==2 %}
+                    <li><a class="dropdown-item text-primary-emphasis" href="/medicos">Medicos</a></li>
+                    <li><a class="dropdown-item text-primary-emphasis" href="/addmedicos">Nuevo medico</a></li>
+                  {% endif %}
+                  {%if rolMedico==1 %}
+                  <li><a class="dropdown-item text-primary-emphasis" href="/medicos">Info. Personal</a></li>
+                  {% endif %}
                 </ul>
               </li>
 
@@ -35,11 +45,13 @@
                 <a class="nav-link dropdown-toggle  " href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                   Pacientes
                 </a>
+
                 <ul class="dropdown-menu navbar-indigo">
                   <li><a class="dropdown-item text-primary-emphasis" href="/pacientes">Pacientes</a></li>
-                  <li><a class="dropdown-item text-primary-emphasis" href="/addPacientes">Nuevo paciente</a></li>
+                    <li><a class="dropdown-item text-primary-emphasis" href="/addPacientes">Nuevo paciente</a></li>
                 </ul>
               </li>
+              
 
               <li class="nav-item">
                 <a class="nav-link" href="#">Citas</a>
@@ -50,8 +62,8 @@
                   Exploraciones
                 </a>
                 <ul class="dropdown-menu navbar-indigo">
-                  <li><a class="dropdown-item text-primary-emphasis" href="#">Exploraciones</a></li>
-                  <li><a class="dropdown-item text-primary-emphasis" href="#">Nuevo exploración</a></li>
+                  <li><a class="dropdown-item text-primary-emphasis" href="/exploraciones">Exploraciones</a></li>
+                  <li><a class="dropdown-item text-primary-emphasis" href="/addExploracion">Nuevo exploración</a></li>
                 </ul>
               </li>
 

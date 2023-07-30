@@ -22,7 +22,7 @@ def index():
 ###########################################   MEDICOS   #####################################################
 @app.route('/addmedicos')
 def addmedicos():
-    return render_template('addMedicos.html')
+    return render_template('addMedicos.html', rolMedico=RMED, idMedico=IDMED)
 
 #Agregar un nuevo medico
 @app.route('/addmedicosguardar', methods=['POST'])
@@ -49,9 +49,12 @@ def addmedicosguardar():
 @app.route('/medicos')
 def medicos():
     SMCS = mysql.connection.cursor()
-    SMCS.execute("SELECT * FROM medicos")
+    if RMED==2:
+        SMCS.execute("SELECT medicos.id, medicos.nombre, medicos.ap, medicos.am, medicos.rfc, medicos.cedula, roles.rol FROM `medicos` INNER JOIN roles on roles.id=medicos.rol_id")
+    else:
+        SMCS.execute('SELECT medicos.id, medicos.nombre, medicos.ap, medicos.am, medicos.rfc, medicos.cedula, roles.rol FROM medicos inner join roles on roles.id=medicos.rol_id where medicos.id=%s', (IDMED,))
     QueryMedicos = SMCS.fetchall()
-    return render_template('showMedicos.html',listMedicos = QueryMedicos)
+    return render_template('showMedicos.html',listMedicos = QueryMedicos, rolMedico=RMED, idMedico=IDMED)
 
 
 #Editar Medico
@@ -110,15 +113,19 @@ def delete(id):
 def addDiagnostico():
     # Obtener lista de pacientes con nombre completo
     pacientes_cur = mysql.connection.cursor()
-    pacientes_cur.execute("SELECT id, CONCAT(nombre, ' ', ap, ' ', am) AS nombre_completo FROM pacientes")
+    if RMED==2:
+        pacientes_cur.execute("SELECT id, CONCAT(nombre, ' ', ap, ' ', am) AS nombre_completo FROM pacientes")
+    else:
+        pacientes_cur.execute("SELECT id, CONCAT(nombre, ' ', ap, ' ', am) AS nombre_completo FROM pacientes where medico_id=%s", (IDMED,))
     lista_pacientes = pacientes_cur.fetchall()
 
     # Obtener lista de exploraciones para el paciente seleccionado
+    
     exploraciones_cur = mysql.connection.cursor()
     exploraciones_cur.execute("SELECT id FROM exploraciones WHERE paciente_id = %s", (lista_pacientes[0][0],))  # Usamos el ID del primer paciente inicialmente
     lista_exploraciones = exploraciones_cur.fetchall()
 
-    return render_template('addDiagnostico.html', pacientes=lista_pacientes, exploraciones=lista_exploraciones)
+    return render_template('addDiagnostico.html', pacientes=lista_pacientes, exploraciones=lista_exploraciones, rolMedico=RMED, idMedico=IDMED)
 
 
 # Agregar un nuevo diagnóstico
@@ -126,14 +133,14 @@ def addDiagnostico():
 def guardarDiagnostico():
     if request.method == 'POST':
         # pasamos a variables el contenido de los input
-        vpaciente = request.form['txtpaciente']
+        # vpaciente = request.form['txtpaciente']
         vexpediente = request.form['txtexpediente']
         vsintomas = request.form['txtsintomas']
         vtratamiento = request.form['txttratamiento']
         vmedicamentos = request.form['txtmedicamentos']
         vindicaciones = request.form['txtindicaciones']
         CSGD = mysql.connection.cursor()  # objeto de tipo cursor
-        CSGD.execute('INSERT INTO diagnosticos (paciente_id, expediente_id, sintomas, tratamiento, medicamentos, indicaciones) VALUES (%s, %s, %s, %s, %s, %s)', (vpaciente, vexpediente, vsintomas, vtratamiento, vmedicamentos, vindicaciones))
+        CSGD.execute('INSERT INTO diagnosticos (expediente_id, sintomas, tratamiento, medicamentos, indicaciones) VALUES (%s, %s, %s, %s, %s)', (vexpediente, vsintomas, vtratamiento, vmedicamentos, vindicaciones))
         mysql.connection.commit()
     flash('El diagnóstico fue agregado correctamente')
     return redirect(url_for('addDiagnostico'))
@@ -143,9 +150,12 @@ def guardarDiagnostico():
 @app.route('/diagnosticos')
 def diagnosticos():
     SDCS = mysql.connection.cursor()
-    SDCS.execute("SELECT * FROM diagnosticos")
+    if RMED==2:
+        SDCS.execute("SELECT diagnosticos.id, pacientes.nombre, pacientes.ap, pacientes.am, exploraciones.id, diagnosticos.sintomas, diagnosticos.tratamiento, diagnosticos.medicamentos, diagnosticos.indicaciones FROM pacientes inner join exploraciones on pacientes.id=exploraciones.paciente_id inner join diagnosticos on exploraciones.id=diagnosticos.expediente_id")
+    else:
+        SDCS.execute("SELECT diagnosticos.id, pacientes.nombre, pacientes.ap, pacientes.am, exploraciones.id, diagnosticos.sintomas, diagnosticos.tratamiento, diagnosticos.medicamentos, diagnosticos.indicaciones, medicos.id, medicos.nombre, medicos.ap, medicos.am FROM pacientes inner join exploraciones on pacientes.id=exploraciones.paciente_id inner join diagnosticos on exploraciones.id=diagnosticos.expediente_id inner join medicos on medicos.id=pacientes.medico_id where medicos.id=%s", (IDMED,))
     QueryDiagnostico = SDCS.fetchall()
-    return render_template('showDiagnostico.html', listDiagnosticos=QueryDiagnostico)
+    return render_template('showDiagnostico.html', listDiagnosticos=QueryDiagnostico, rolMedico=RMED, idMedico=IDMED)
 
 
 # Editar diagnóstico
@@ -155,7 +165,7 @@ def editDiagnostico(id):
     EDCS.execute('SELECT * FROM diagnosticos WHERE id = %s', (id,))
     QueryEDId = EDCS.fetchone()
     print(QueryEDId)
-    return render_template('editDiagnostico.html', listEDId=QueryEDId)
+    return render_template('editDiagnostico.html', listEDId=QueryEDId, rolMedico=RMED, idMedico=IDMED)
 
 @app.route('/updateDiagnostico/<id>', methods=['POST'])
 def updateDiagnostico(id):
@@ -204,9 +214,12 @@ def deleteDiagnostico(id):
 def addEstudio():
     # Obtener lista de pacientes con nombre completo
     pacientes_cur = mysql.connection.cursor()
-    pacientes_cur.execute("SELECT id, CONCAT(nombre, ' ', ap, ' ', am) AS nombre_completo FROM pacientes")
+    if RMED==2:
+        pacientes_cur.execute("SELECT id, CONCAT(nombre, ' ', ap, ' ', am) AS nombre_completo FROM pacientes")
+    else:
+        pacientes_cur.execute("SELECT id, CONCAT(nombre, ' ', ap, ' ', am) AS nombre_completo FROM pacientes where medico_id=%s", (IDMED,))
     lista_pacientes = pacientes_cur.fetchall()
-    return render_template('addEstudio.html', pacientes=lista_pacientes)
+    return render_template('addEstudio.html', pacientes=lista_pacientes, rolMedico=RMED, idMedico=IDMED)
 
 
 # Agregar un nuevo estudio medico
@@ -230,7 +243,7 @@ def estudios():
     SECS = mysql.connection.cursor()
     SECS.execute("SELECT * FROM estudios")
     QueryEstudios = SECS.fetchall()
-    return render_template('showEstudio.html', listEstudios=QueryEstudios)
+    return render_template('showEstudio.html', listEstudios=QueryEstudios, rolMedico=RMED, idMedico=IDMED)
 
 
 ###########################################   ESTUDIOS   #####################################################
@@ -245,10 +258,10 @@ def addPacientes():
     
     # Obtener lista de enfermedades
     enfermedades_cur = mysql.connection.cursor()
-    enfermedades_cur.execute("SELECT nombre FROM enfermedades")
+    enfermedades_cur.execute("SELECT id,nombre FROM enfermedades")
     lista_enfermedades = enfermedades_cur.fetchall()
     
-    return render_template('addPaciente.html', medicos=lista_medicos, enfermedades=lista_enfermedades)
+    return render_template('addPaciente.html', medicos=lista_medicos, enfermedades=lista_enfermedades, rolMedico=RMED, idMedico=IDMED)
 
 # guardar nuevo paciente
 @app.route('/guardarPaciente', methods=['POST', 'GET'])
@@ -260,8 +273,11 @@ def guardarPaciente():
         Vfechanacimiento = request.form['txtFechanacimiento']
         Valergias = request.form['txtalergias']
         Vantecedentes = request.form['txtantecedentes']
-        Venfermedad = int(request.form['txtEnfermedades'])  # Asegúrate de que sea un entero
-        Vmedico = int(request.form['txtmedico']) 
+        Venfermedad = int(request.form['txtEnfermedades'])  # Asegúrate de que sea un entero / Ricardo: ????
+        if RMED==1:
+            Vmedico = IDMED
+        else:
+            Vmedico = int(request.form['txtmedico']) 
         CS = mysql.connection.cursor()
         CS.execute('INSERT INTO pacientes (nombre, ap, am, birthdate, alergias, antecedentes, enfermedad_id, medico_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)', (Vnombre, Vap, Vam, Vfechanacimiento, Valergias, Vantecedentes, Venfermedad, Vmedico))
         mysql.connection.commit()
@@ -272,9 +288,13 @@ def guardarPaciente():
 @app.route('/pacientes')
 def pacientes():
     SPCS = mysql.connection.cursor()
-    SPCS.execute("SELECT * FROM pacientes")
+    #SPCS.execute("SELECT * FROM pacientes")
+    if RMED==1:
+        SPCS.execute('SELECT pacientes.id, pacientes.nombre, pacientes.ap, pacientes.am, pacientes.birthdate, pacientes.alergias, pacientes.antecedentes, enfermedades.nombre, medicos.nombre, medicos.ap, medicos.am FROM pacientes inner join enfermedades on enfermedades.id=pacientes.enfermedad_id inner join medicos on pacientes.medico_id=medicos.id where medicos.id=%s order by pacientes.nombre ASC', (IDMED,))
+    else:
+        SPCS.execute('SELECT pacientes.id, pacientes.nombre, pacientes.ap, pacientes.am, pacientes.birthdate, pacientes.alergias, pacientes.antecedentes, enfermedades.nombre, medicos.nombre, medicos.ap, medicos.am FROM pacientes inner join enfermedades on enfermedades.id=pacientes.enfermedad_id inner join medicos on pacientes.medico_id=medicos.id ORDER BY pacientes.nombre ASC')
     QueryPacientes = SPCS.fetchall()
-    return render_template('showPacientes.html', listPaciente=QueryPacientes)
+    return render_template('showPacientes.html', listPaciente=QueryPacientes, rolMedico=RMED, idMedico=IDMED)
 
 
 # Editar paciente
@@ -284,7 +304,18 @@ def editPaciente(id):
     EPCS.execute('SELECT * FROM pacientes WHERE id = %s', (id,))
     QueryEPId = EPCS.fetchone()
     print(QueryEPId)
-    return render_template('editPaciente.html', listEPId=QueryEPId)
+
+    # Obtener lista de enfermedades
+    enfermedades_cur = mysql.connection.cursor()
+    enfermedades_cur.execute("SELECT id,nombre FROM enfermedades")
+    lista_enfermedades = enfermedades_cur.fetchall()
+
+    # Obtener lista de medicos con nombre completo
+    medicos_cur = mysql.connection.cursor()
+    medicos_cur.execute("SELECT id, CONCAT(nombre, ' ', ap, ' ', am) AS nombre_completo FROM medicos")
+    lista_medicos = medicos_cur.fetchall()
+
+    return render_template('editPaciente.html', listEPId=QueryEPId, enfermedades=lista_enfermedades, medicos=lista_medicos, rolMedico=RMED, idMedico=IDMED)
 
 @app.route('/updatePaciente/<id>', methods=['POST'])
 def updatePaciente(id):
@@ -295,8 +326,11 @@ def updatePaciente(id):
         vfechanacimiento = request.form['txtFechanacimiento']
         valergias = request.form['txtalergias']
         vantecedentes = request.form['txtantecedentes']
-        venfermedad = int(request.form['txtEnfermedades'])  
-        vmedico = int(request.form['txtmedico']) 
+        venfermedad = int(request.form['txtEnfermedades']) 
+        if RMED==1: 
+            vmedico = IDMED 
+        else:
+            vmedico = int(request.form['txtmedico'])
         UpdPCur = mysql.connection.cursor()
         UpdPCur.execute('UPDATE pacientes SET nombre = %s, ap = %s, am = %s, birthdate = %s, alergias = %s, antecedentes = %s, enfermedad_id  = %s, medico_id = %s WHERE id = %s', (vnombre,vap,vam,vfechanacimiento,valergias,vantecedentes,venfermedad,vmedico,  id))
         mysql.connection.commit()
@@ -328,15 +362,78 @@ def deletePaciente(id):
 ###########################################   PACIENTES   #####################################################
 
 ###########################################   EXPLORACIONES   #####################################################
+@app.route('/exploraciones')
+def exploraciones():
+    CC=mysql.connection.cursor()
+    if RMED==1:
+        CC.execute('SELECT exploraciones.id, Pacientes.Nombre, Pacientes.ap, Pacientes.am, round(DATEDIFF(NOW(), pacientes.birthdate)/365, 0) as Edad, Exploraciones.fecha, Exploraciones.peso, Exploraciones.altura, Exploraciones.altura, Exploraciones.temperatura, Exploraciones.latidos, Exploraciones.glucosa, Exploraciones.oxigeno FROM exploraciones inner join pacientes on exploraciones.paciente_id=pacientes.id where pacientes.medico_id=%s order by Exploraciones.fecha desc', (IDMED,))
+    else:
+        CC.execute('SELECT exploraciones.id, Pacientes.Nombre, Pacientes.ap, Pacientes.am, round(DATEDIFF(NOW(), pacientes.birthdate)/365, 0) as Edad, Exploraciones.fecha, Exploraciones.peso, Exploraciones.altura, Exploraciones.temperatura, Exploraciones.latidos, Exploraciones.glucosa, Exploraciones.oxigeno, medicos.nombre, medicos.ap, medicos.am FROM exploraciones inner join pacientes on exploraciones.paciente_id=pacientes.id inner join medicos on medicos.id=pacientes.medico_id order by Exploraciones.fecha desc')
+    conExploraciones=CC.fetchall()
+    return render_template('showExploraciones.html',listExploraciones=conExploraciones, rolMedico=RMED, idMedico=IDMED)
 
+@app.route('/editExploraciones/<id>')
+def editExploraciones(id):
+    EECS = mysql.connection.cursor()
+    EECS.execute('SELECT * FROM Exploraciones WHERE id = %s', (id,))
+    QueryEPId = EECS.fetchone()
 
-###########################################   EXPLORACIONES   #####################################################
+    CP=mysql.connection.cursor()
+    if RMED==2:
+        CP.execute('SELECT id, nombre, ap, am from pacientes')
+    else:
+        CP.execute('SELECT id, nombre, ap, am from pacientes where medico_id=%s', (IDMED,))
+    NomPacientes=CP.fetchall()
+    return render_template('editExploraciones.html', Nombres=NomPacientes,exploracion=QueryEPId, rolMedico=RMED, idMedico=IDMED)
 
+@app.route('/updateExploracion/<id>', methods=['POST'])
+def updateExploracion(id):
+    if request.method == 'POST':
+        Vpaciente_id=request.form['txtpaciente']
+        Vfecha= request.form['txtFecha']
+        Vpeso= request.form['txtPeso']
+        Valtura= request.form['txtAltura']
+        Vtemperatura=request.form['txtTemperatura']
+        Vlatidos=request.form['txtLatidos']
+        Vglucosa=request.form['txtGlucosa']
+        Voxigeno=request.form['txtOxigeno']
+        CS = mysql.connection.cursor()
+        CS.execute('UPDATE exploraciones set paciente_id=%s, fecha=%s, peso=%s, altura=%s, temperatura=%s, latidos=%s, glucosa=%s, oxigeno=%s where id=%s', (Vpaciente_id, Vfecha, Vpeso, Valtura, Vtemperatura,  Vlatidos, Vglucosa, Voxigeno, id))
+        mysql.connection.commit()
+    flash('La revision del paciente '+ Vpaciente_id + '  fue modificado correctamente' )
+    return redirect(url_for('exploraciones'))
+
+@app.route('/addExploracion')
+def addExploracion():
+    CP=mysql.connection.cursor()
+    if RMED==2:
+        CP.execute('SELECT id, nombre, ap, am from pacientes')
+    else:
+        CP.execute('SELECT id, nombre, ap, am from pacientes where medico_id=%s', (IDMED,))
+    NomPacientes=CP.fetchall()
+    return render_template('addExploraciones.html', Nombres=NomPacientes,rolMedico=RMED, idMedico=IDMED)
+
+@app.route('/guardarExploracion', methods=['POST'])
+def guardarExploracion():
+    if request.method == 'POST':
+        Vpaciente_id=request.form['txtPaciente_id']
+        Vfecha= request.form['txtFecha']
+        Vpeso= request.form['txtPeso']
+        Valtura= request.form['txtAltura']
+        Vtemperatura=request.form['txtTemperatura']
+        Vlatidos=request.form['txtLatidos']
+        Vglucosa=request.form['txtGlucosa']
+        Voxigeno=request.form['txtOxigeno']
+        CS = mysql.connection.cursor()
+        CS.execute('insert into exploraciones (paciente_id, fecha, peso, altura, temperatura, latidos, glucosa, oxigeno) values (%s, %s, %s, %s, %s, %s, %s, %s)',(Vpaciente_id, Vfecha, Vpeso, Valtura, Vtemperatura, Vlatidos, Vglucosa, Voxigeno))
+        mysql.connection.commit()
+    flash('La exploración fue agregada correctamente')
+    return redirect(url_for('exploraciones'))
 
 ###########################################   Enfermedades   #####################################################
 @app.route('/addEnfermedades')
 def addEnfermedades():
-    return render_template('addEnfermedades.html')
+    return render_template('addEnfermedades.html', rolMedico=RMED, idMedico=IDMED)
 
 # Agregar un nueva nueva enfermedad al catalogo de enfermedades
 @app.route('/guardarEnfermedad', methods=['POST'])
@@ -388,7 +485,7 @@ def login():
             else:
                 print('Medico')
 
-            return redirect(url_for('MEDICOS'))
+            return redirect(url_for('medicos', rolMedico=RMED, idMedico=IDMED))
         else:
             flash('Usuario O Contraseña Incorrectas')
             return render_template('login.html')

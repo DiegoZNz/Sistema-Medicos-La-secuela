@@ -1,0 +1,41 @@
+{% extends 'plantilla.html' %}
+
+{% block body %}
+
+<form action="/updateExploracion/{{exploracion.0}}" method="POST">
+
+    <label>Paciente</label>
+    <select id="inputPaciente" name="txtpaciente"required>
+        {% for Nom in Nombres %}
+        <option value="{{Nom.0}}">{{Nom.1}} {{Nom.2}} {{Nom.3}}</option>
+        {% endfor %}
+    </select>
+    <br>
+    <label>Fecha</label>
+    <input type="date" name="txtFecha" placeholder="Escribe una fecha" value="{{exploracion.2}}" required>
+    <br>
+    <label>Peso(KG)</label>
+    <input type="number" step="0.01" name="txtPeso" placeholder="Escribe el peso en kg" value="{{exploracion.3}}" required>
+    <br>
+    <label>Altura(M)</label>
+    <input type="number" step="0.01" name="txtAltura" placeholder="Escribe la altura en Metros" value="{{exploracion.4}}" required>
+    <br>
+    <label>Temperatura(C°)</label>
+    <input type="number" step="0.01" name="txtTemperatura" placeholder="Escribe la temperatura en grados centigrados" value="{{exploracion.5}}" required>
+    <br>
+    <label>Latidos(Veces por minuto)</label>
+    <input type="number" step="0.01" name="txtLatidos" placeholder="Escribe cuantos latidos por minuto se registran" value="{{exploracion.6}}" required>
+    <br>
+    <label>Glucosa(mg/dl)</label>
+    <input type="number" step="0.01" name="txtGlucosa" placeholder="Escribe la cantidad de glucosa" value="{{exploracion.7}}" required>
+    <br>
+    <label>Oxigeno(%)</label>
+    <input type="number" step="0.01" name="txtOxigeno" placeholder="Escribe el porcentaje de oxigeno" value="{{exploracion.8}}" required>
+    <br>    
+    <button type="submit">Actualizar</button>
+</form>
+
+
+
+
+{% endblock %}

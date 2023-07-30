@@ -13,7 +13,9 @@
                     <th scope="col">Alergias</th>
                     <th scope="col">Antecedentes Familiares</th>
                     <th scope="col">Enfermedad</th>
+                    {%if rolMedico==2 %}
                     <th scope="col">Medico</th>
+                    {% endif %}
                     <th scope="col">Acciones</th>
                 </tr>
             </thead>
@@ -28,17 +30,20 @@
                         <td>{{ pacientes[5] }}</td>
                         <td>{{ pacientes[6] }}</td>
                         <td>{{ pacientes[7] }}</td>
-                        <td>{{ pacientes[8] }}</td>
-                        <td>{{ pacientes[9] }}</td>
+                        {%if rolMedico==2 %}
+                        <td>{{pacientes[8]}} {{pacientes[9]}} {{pacientes[10]}}</td>
+                        {% endif %}
 
     
                         <td>
                             <button class="btn btn-primary" type="submit">
                                 <a href="/editPaciente/{{ pacientes[0] }}" class="text-light">Editar</a>
                             </button>
+                            {%if rolMedico==2 %}
                             <button class="btn btn-primary" type="submit">
                                 <a href="/delPaciente/{{ pacientes[0] }}" class="text-light">Eliminar</a>
                             </button>
+                            {% endif %}
                         </td>
                     </tr>
                 {% endfor %}

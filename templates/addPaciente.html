@@ -2,6 +2,8 @@
 
 {% block body %}
 
+
+
 <div class="wrapper" style="margin-top: 2cm; margin-left: 1cm; margin-right: 1cm;">
     <div class="content">
         <form class="row g-3" method="post" action="/guardarPaciente">
@@ -26,7 +28,7 @@
                 <select id="inputEnfermedades" class="form-select" name="txtEnfermedades" required>
                     <option value="">Seleccione una enfermedad</option>
                     {% for enfermedad in enfermedades %}
-                        <option value="{{ enfermedad[0] }}">{{ enfermedad[0] }}</option>
+                        <option value="{{ enfermedad[0] }}">{{ enfermedad[1] }}</option>
                     {% endfor %}
                 </select>                
             </div>
@@ -39,6 +41,7 @@
                 <textarea class="form-control" name="txtantecedentes" rows="3" required placeholder="Ingresa los antecedentes familiares"></textarea>
             </div>
 
+            {%if rolMedico==2 %} 
             <div class="col-md-6">
                 <label for="inputMedico" class="form-label">Medico</label>
                 <select id="inputMedico" class="form-select" name="txtmedico" required>
@@ -48,6 +51,7 @@
                     {% endfor %}
                 </select>
             </div>
+            {% endif %}
 
             <div class="col-12">
                 <button type="submit" class="btn btn-primary">Guardar</button>

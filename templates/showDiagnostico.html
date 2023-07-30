@@ -19,21 +19,23 @@
             <tbody>
                 {% for diagnosticos in listDiagnosticos %}
                     <tr>
-                        <td>{{ diagnosticos[0] }}</td>
-                        <td>{{ diagnosticos[1] }}</td>
-                        <td>{{ diagnosticos[2] }}</td>
-                        <td>{{ diagnosticos[3] }}</td>
+                        <td>{{diagnosticos[0]}}</td>
+                        <td>{{diagnosticos[1]}} {{diagnosticos[2]}} {{ diagnosticos[3] }}</td>
                         <td>{{ diagnosticos[4] }}</td>
                         <td>{{ diagnosticos[5] }}</td>
                         <td>{{ diagnosticos[6] }}</td>
+                        <td>{{ diagnosticos[7] }}</td>
+                        <td>{{ diagnosticos[8] }}</td>
     
                         <td>
                             <button class="btn btn-primary" type="submit">
                                 <a href="/editDiagnostico/{{ diagnosticos[0] }}" class="text-light">Editar</a>
                             </button>
+                            {%if rolMedico==2 %} 
                             <button class="btn btn-primary" type="submit">
                                 <a href="/delDiagnostico/{{ diagnosticos[0] }}" class="text-light">Eliminar</a>
                             </button>
+                            {% endif %}
                         </td>
                     </tr>
                 {% endfor %}

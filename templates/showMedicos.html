@@ -12,7 +12,9 @@
                     <th scope="col">RFC</th>
                     <th scope="col">Cedula</th>
                     <th scope="col">Rol</th>
+                    {%if rolMedico==2 %}
                     <th scope="col">Acciones</th>
+                    {% endif %}
     
                 </tr>
             </thead>
@@ -28,18 +30,22 @@
                         <td>{{ medicos[6] }}</td>
     
                         <td>
+                            {%if rolMedico==2 %}
                             <button class="btn btn-primary" type="submit">
                                 <a href="/editMedico/{{ medicos[0] }}" class="text-light">Editar</a>
                             </button>
                             <button class="btn btn-primary" type="submit">
                                 <a href="/delMedico/{{ medicos[0] }}" class="text-light">Eliminar</a>
                             </button>
+                            {% endif %}
                         </td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+
+    <a>{{rolMedico, idMedico}}</a>
         
     <!-- Footer -->
     <footer class="footer bg-light text-white mt-5 d-flex flex-column flex-md-row  text-md-start justify-content-between py-4 px-4 px-xl-5 ">

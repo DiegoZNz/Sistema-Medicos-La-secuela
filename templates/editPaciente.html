@@ -26,19 +26,20 @@
                 <select id="inputEnfermedades" class="form-select" name="txtEnfermedades" required value="{{ listEPId[5] }}">
                     <option value="">Seleccione una enfermedad</option>
                     {% for enfermedad in enfermedades %}
-                        <option value="{{ enfermedad[0] }}">{{ enfermedad[0] }}</option>
+                        <option value="{{ enfermedad[0] }}">{{ enfermedad[1] }}</option>
                     {% endfor %}
                 </select>                
             </div>
             <div class="col-md-6">
                 <label for="exampleFormControlTextarea2" class="form-label">Alergias</label>
-                <textarea class="form-control" name="txtalergias" rows="3" required placeholder="Ingresa las alergias del paciente" value="{{ listEPId[6] }}"></textarea>
+                <textarea class="form-control" name="txtalergias" rows="3" required placeholder="Ingresa las alergias del paciente" value="{{ listEPId[5] }}">{{ listEPId[5] }}</textarea>
             </div>
             <div class="col-md-6">
                 <label for="exampleFormControlTextarea3" class="form-label">Antecedentes Familiares</label>
-                <textarea class="form-control" name="txtantecedentes" rows="3" required placeholder="Ingresa los antecedentes familiares" value="{{ listEPId[7] }}"></textarea>
+                <textarea class="form-control" name="txtantecedentes" rows="3" required placeholder="Ingresa los antecedentes familiares" value="{{ listEPId[6] }}">{{ listEPId[6] }}</textarea>
             </div>
 
+            {%if rolMedico==2 %}
             <div class="col-md-6">
                 <label for="inputMedico" class="form-label">Medico</label>
                 <select id="inputMedico" class="form-select" name="txtmedico" required value="{{ listEPId[8] }}">
@@ -48,6 +49,7 @@
                     {% endfor %}
                 </select>
             </div>
+            {% endif %}
 
             <div class="col-12">
                 <button type="submit" class="btn btn-primary">Actualizar</button>

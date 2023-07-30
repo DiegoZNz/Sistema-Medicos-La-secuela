@@ -7,12 +7,13 @@
         
     <div class="wrapper" style="margin-top:2cm; margin-left:1cm; margin-right: 1cm;">
         <div class="content">  
-            <form class="row g-3" method="post" action="/GUARDAR_EXPLORACIONES">
+            <form class="row g-3" method="post" action="/guardarExploracion">
                 <div class="col-md-4">
                     <label for="inputPaciente" class="form-label">Paciente</label>
                     <select name="txtPaciente_id" required>
-                        {% for Nom in nombres %}
-                            <option>{{Nom.0}}</option>
+                        <option selected>Ingresa un nombre</option>
+                        {% for Nom in Nombres %}
+                            <option value="{{Nom.0}}">{{Nom.1}} {{Nom.2}} {{Nom.3}}</option>
                         {% endfor %}
                     </select>
                 </div>
