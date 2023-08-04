@@ -1,13 +1,12 @@
 #---------------------------------------Necesario para funcionar----------------------------------------------------------------------------
 
-from flask import Flask,render_template,request,redirect,url_for,flash, session
+from flask import Flask,render_template,request,redirect,url_for,flash, session, after_this_request
 from flask_mysqldb import MySQL
-
-RMED=0
-IDMED=0
+import bcrypt
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
+from pdf_utils import generar_pdf_receta
 
 app = Flask(__name__, static_folder='static')
-
 app.config['MYSQL_HOST']='localhost'
 app.config['MYSQL_USER']='root'
 app.config['MYSQL_PASSWORD']=''
@@ -15,12 +14,91 @@ app.config['MYSQL_DB']='medsys'
 app.secret_key='mysecretkey'
 mysql= MySQL(app)
 
+login_manager = LoginManager(app)
+login_manager.login_view = 'index'
+login_manager.login_message = 'Por favor, inicia sesión para acceder a esta página.' 
+
+
+class User(UserMixin):
+    def __init__(self, id, rfc, pass_hash):
+        self.id = id
+        self.rfc = rfc
+        self.pass_hash = pass_hash
+
+    def get_id(self):
+        return str(self.id)
+    
+    
+@login_manager.user_loader
+def load_user(user_id):
+    cur = mysql.connection.cursor()
+    cur.execute('SELECT id, rfc, pass FROM medicos WHERE id = %s', (user_id,))
+    account = cur.fetchone()
+    cur.close()
+
+    if account:
+        return User(id=account[0], rfc=account[1], pass_hash=account[2])
+    return None
+
+def encriptarContrasena(password):
+    sal = bcrypt.gensalt()
+    conHa = bcrypt.hashpw(password.encode(), sal)
+    return conHa
+
+RMED=0
+IDMED=0
+
 @app.route('/')
 def index():
     return render_template('login.html')
+
+
+@app.route('/acceso-login', methods=["POST", "GET"])
+def login():
+    if request.method == 'POST' and 'txtRfc' in request.form and 'txtPassword' in request.form:
+        _rfc = request.form['txtRfc']
+        _password = request.form['txtPassword']
+
+        cur = mysql.connection.cursor()
+        cur.execute('SELECT id, rfc, pass FROM medicos WHERE rfc = %s', (_rfc,))
+        account = cur.fetchone()
+
+        if account and bcrypt.checkpw(_password.encode(), account[2].encode()):
+            user = User(id=account[0], rfc=account[1], pass_hash=account[2])
+            login_user(user)
+
+            cur2 = mysql.connection.cursor()
+            cur2.execute('SELECT rol_id FROM medicos INNER JOIN roles ON medicos.rol_id=roles.id WHERE medicos.id=%s', (account[0],))
+            rol = cur2.fetchone()
+            rolMedico = rol[0]
+            
+            global RMED
+            global IDMED
+            RMED=rol[0]
+            IDMED=account[0]
+
+            return redirect(url_for('medicos', rolMedico=RMED, idMedico=IDMED))
+        else:
+            flash('Usuario o Contraseña Incorrectas')
+            return render_template('login.html')
+        
+        
+
+@app.route('/logout')
+@login_required
+def logout():
+    @after_this_request
+    def add_no_cache(response):
+        response.headers['Cache-Control'] = 'no-store'
+        return response
+
+    logout_user()
+    return redirect(url_for('index'))
+
   
 ###########################################   MEDICOS   #####################################################
 @app.route('/addmedicos')
+@login_required
 def addmedicos():
     return render_template('addMedicos.html', rolMedico=RMED, idMedico=IDMED)
 
@@ -36,17 +114,19 @@ def addmedicosguardar():
         vcedula=request.form['txtcedula']
         vrol=request.form['txtrol']
         vpass=request.form['txtpass']
+        conH=encriptarContrasena(vpass)
         
         # Conectar y ejecutar el insert
         CSGM = mysql.connection.cursor() # objeto de tipo cursor
-        CSGM.execute('insert into medicos (nombre, ap, am, rfc, cedula, rol_id, pass) values (%s, %s, %s, %s, %s, %s, %s)',(vnombre, vap, vam, vrfc, vcedula, vrol, vpass))
+        CSGM.execute('insert into medicos (nombre, ap, am, rfc, cedula, rol_id, pass) values (%s, %s, %s, %s, %s, %s, %s)',(vnombre, vap, vam, vrfc, vcedula, vrol, conH))
         mysql.connection.commit()
     flash('El medico fue agregado correctamente')
-    return redirect(url_for('addmedicos'))
+    return redirect(url_for('medicos'))
 
 
 #Mostrar lista de Medicos
 @app.route('/medicos')
+@login_required
 def medicos():
     SMCS = mysql.connection.cursor()
     if RMED==2:
@@ -58,40 +138,50 @@ def medicos():
 
 
 #Editar Medico
-
 @app.route('/editMedico/<id>')
+@login_required
 def editMedico(id):
     EMCS = mysql.connection.cursor()
-    EMCS.execute('SELECT * FROM medicos where id = %s',(id,))
+    EMCS.execute('select m.id, m.nombre, m.ap, m.am, m.rfc,m.cedula, r.rol, m.pass from medicos m inner join roles r on m.rol_id = r.id where m.id = %s',(id,))
     QueryEMId = EMCS.fetchone()
-    print (QueryEMId)
-    return render_template('editMedico.html',listEMId = QueryEMId)
+    q = mysql.connection.cursor()
+    q.execute('select * from roles')
+    Queryroles = q.fetchall()
+    return render_template('editMedico.html',listEMId = QueryEMId, listRoles = Queryroles)
+
 
 @app.route('/updateMedico/<id>', methods=['POST'])
 def update(id):
     if request.method == 'POST':
-        Vnombre= request.form['txtnombre']
-        Vap= request.form['txtap']
-        Vam= request.form['txtam']
-        Vrfc=request.form['txtrfc']
-        Vcedula=request.form['txtcedula']
-        Vrol=request.form['txtrol']
-        Vpass=request.form['txtpass']
-        UpdMCur = mysql.connection.cursor()
-        UpdMCur.execute('UPDATE medicos SET nombre = %s, ap = %s, am = %s, rfc = %s, cedula = %s, rol_id  = %s, pass=%s WHERE id = %s', (Vnombre, Vap, Vam, Vrfc, Vcedula, Vrol, Vpass, id))
+        Vnombre = request.form['txtnombre']
+        Vap = request.form['txtap']
+        Vam = request.form['txtam']
+        Vrfc = request.form['txtrfc']
+        Vcedula = request.form['txtcedula']
+        Vrol = request.form['txtrol']
+        Vpass = request.form['txtpass']
+        VpassOG = request.form['pass_original']
+
+        if Vpass == VpassOG:
+            conH = VpassOG
+        else:
+            conH = encriptarContrasena(Vpass)
+            
+        UpdMCur = mysql.connection.cursor()   
+        UpdMCur.execute('UPDATE medicos SET nombre = %s, ap = %s, am = %s, rfc = %s, cedula = %s, rol_id  = %s, pass = %s WHERE id = %s', (Vnombre, Vap, Vam, Vrfc, Vcedula, Vrol, conH, id))
         mysql.connection.commit()
-    flash('La información del Medico fue actualizada correctamente')
+        flash('La información del Medico fue actualizada correctamente')
+
     return redirect(url_for('medicos'))
 
-
 #Eliminar Medico
-
 @app.route('/delMedico/<id>')
+@login_required
 def delMedico(id):
     DMCS = mysql.connection.cursor()
     DMCS.execute('SELECT * FROM medicos where id = %s',(id,))
     QueryId = DMCS.fetchone()
-    print (QueryId)
+    
     return render_template('deleteMedico.html',listIdDlt = QueryId)
 
 @app.route('/deleteMedico/<id>', methods=['POST'])
@@ -106,10 +196,11 @@ def delete(id):
             flash('Eliminación cancelada')
     return redirect(url_for('medicos'))
 
-###########################################   MEDICOS   #####################################################
+###########################################   /MEDICOS   #####################################################
 
 ###########################################   DIAGNOSTICOS   #####################################################
 @app.route('/addDiagnostico')
+@login_required
 def addDiagnostico():
     # Obtener lista de pacientes con nombre completo
     pacientes_cur = mysql.connection.cursor()
@@ -127,27 +218,26 @@ def addDiagnostico():
 
     return render_template('addDiagnostico.html', pacientes=lista_pacientes, exploraciones=lista_exploraciones, rolMedico=RMED, idMedico=IDMED)
 
-
 # Agregar un nuevo diagnóstico
 @app.route('/guardarDiagnostico', methods=['POST'])
 def guardarDiagnostico():
     if request.method == 'POST':
         # pasamos a variables el contenido de los input
-        # vpaciente = request.form['txtpaciente']
+        vpaciente = request.form['txtpaciente']
         vexpediente = request.form['txtexpediente']
         vsintomas = request.form['txtsintomas']
         vtratamiento = request.form['txttratamiento']
         vmedicamentos = request.form['txtmedicamentos']
         vindicaciones = request.form['txtindicaciones']
         CSGD = mysql.connection.cursor()  # objeto de tipo cursor
-        CSGD.execute('INSERT INTO diagnosticos (expediente_id, sintomas, tratamiento, medicamentos, indicaciones) VALUES (%s, %s, %s, %s, %s)', (vexpediente, vsintomas, vtratamiento, vmedicamentos, vindicaciones))
+        CSGD.execute('INSERT INTO diagnosticos (paciente_id, expediente_id, sintomas, tratamiento, medicamentos, indicaciones) VALUES (%s, %s, %s, %s, %s, %s)', (vpaciente, vexpediente, vsintomas, vtratamiento, vmedicamentos, vindicaciones))
         mysql.connection.commit()
     flash('El diagnóstico fue agregado correctamente')
     return redirect(url_for('addDiagnostico'))
 
-
 # Mostrar lista de diagnósticos
 @app.route('/diagnosticos')
+@login_required
 def diagnosticos():
     SDCS = mysql.connection.cursor()
     if RMED==2:
@@ -157,14 +247,13 @@ def diagnosticos():
     QueryDiagnostico = SDCS.fetchall()
     return render_template('showDiagnostico.html', listDiagnosticos=QueryDiagnostico, rolMedico=RMED, idMedico=IDMED)
 
-
 # Editar diagnóstico
 @app.route('/editDiagnostico/<id>')
+@login_required
 def editDiagnostico(id):
     EDCS = mysql.connection.cursor()
     EDCS.execute('SELECT * FROM diagnosticos WHERE id = %s', (id,))
     QueryEDId = EDCS.fetchone()
-    print(QueryEDId)
     return render_template('editDiagnostico.html', listEDId=QueryEDId, rolMedico=RMED, idMedico=IDMED)
 
 @app.route('/updateDiagnostico/<id>', methods=['POST'])
@@ -182,14 +271,13 @@ def updateDiagnostico(id):
     flash('La información del diagnóstico fue actualizada correctamente')
     return redirect(url_for('diagnosticos'))
 
-
 # Eliminar diagnóstico
 @app.route('/delDiagnostico/<id>')
+@login_required
 def delDiagnostico(id):
     DDCS = mysql.connection.cursor()
     DDCS.execute('SELECT * FROM diagnosticos WHERE id = %s', (id,))
     QueryId = DDCS.fetchone()
-    print(QueryId)
     return render_template('deleteDiagnostico.html', listIdDlt=QueryId)
 
 @app.route('/deleteDiagnostico/<id>', methods=['POST'])
@@ -204,13 +292,11 @@ def deleteDiagnostico(id):
             flash('Eliminación cancelada')
     return redirect(url_for('diagnosticos'))
 
-
-###########################################   DIAGNOSTICOS   #####################################################
-
-
+###########################################   /DIAGNOSTICOS   #####################################################
 
 ###########################################   ESTUDIOS   #####################################################
 @app.route('/addEstudio')
+@login_required
 def addEstudio():
     # Obtener lista de pacientes con nombre completo
     pacientes_cur = mysql.connection.cursor()
@@ -220,7 +306,6 @@ def addEstudio():
         pacientes_cur.execute("SELECT id, CONCAT(nombre, ' ', ap, ' ', am) AS nombre_completo FROM pacientes where medico_id=%s", (IDMED,))
     lista_pacientes = pacientes_cur.fetchall()
     return render_template('addEstudio.html', pacientes=lista_pacientes, rolMedico=RMED, idMedico=IDMED)
-
 
 # Agregar un nuevo estudio medico
 @app.route('/guardarEstudio', methods=['POST'])
@@ -234,11 +319,11 @@ def guardarEstudio():
         CSGE.execute('INSERT INTO estudios (paciente_id, nombre, descripcion) VALUES (%s, %s, %s)', (vpaciente,  vnombre, vdescripcion))
         mysql.connection.commit()
     flash('El estudio medico fue agregado correctamente')
-    return redirect(url_for('addEstudio'))
-
+    return redirect(url_for('estudios'))
 
 # Mostrar lista de estudios medicos
 @app.route('/estudios')
+@login_required
 def estudios():
     SECS = mysql.connection.cursor()
     SECS.execute("SELECT * FROM estudios")
@@ -246,10 +331,11 @@ def estudios():
     return render_template('showEstudio.html', listEstudios=QueryEstudios, rolMedico=RMED, idMedico=IDMED)
 
 
-###########################################   ESTUDIOS   #####################################################
+###########################################   /ESTUDIOS   #####################################################
 
 ###########################################   PACIENTES   #####################################################
 @app.route('/addPacientes')
+@login_required
 def addPacientes():
     # Obtener lista de medicos con nombre completo
     medicos_cur = mysql.connection.cursor()
@@ -282,10 +368,11 @@ def guardarPaciente():
         CS.execute('INSERT INTO pacientes (nombre, ap, am, birthdate, alergias, antecedentes, enfermedad_id, medico_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)', (Vnombre, Vap, Vam, Vfechanacimiento, Valergias, Vantecedentes, Venfermedad, Vmedico))
         mysql.connection.commit()
         flash('El paciente fue agregado correctamente')
-    return redirect(url_for('addPacientes'))
+    return redirect(url_for('pacientes'))
 
 # Mostrar lista de pacientes
 @app.route('/pacientes')
+@login_required
 def pacientes():
     SPCS = mysql.connection.cursor()
     #SPCS.execute("SELECT * FROM pacientes")
@@ -296,25 +383,22 @@ def pacientes():
     QueryPacientes = SPCS.fetchall()
     return render_template('showPacientes.html', listPaciente=QueryPacientes, rolMedico=RMED, idMedico=IDMED)
 
-
 # Editar paciente
 @app.route('/editPaciente/<id>')
+@login_required
 def editPaciente(id):
     EPCS = mysql.connection.cursor()
-    EPCS.execute('SELECT * FROM pacientes WHERE id = %s', (id,))
+    EPCS.execute('SELECT p.id, p.nombre, p.ap, p.am , p.birthdate, p.alergias, p.antecedentes, e.nombre, p.medico_id from pacientes p inner join enfermedades e on p.enfermedad_id = e.id where p.id = %s', (id,))
     QueryEPId = EPCS.fetchone()
-    print(QueryEPId)
-
     # Obtener lista de enfermedades
     enfermedades_cur = mysql.connection.cursor()
-    enfermedades_cur.execute("SELECT id,nombre FROM enfermedades")
+    enfermedades_cur.execute("SELECT * FROM enfermedades")
     lista_enfermedades = enfermedades_cur.fetchall()
 
     # Obtener lista de medicos con nombre completo
     medicos_cur = mysql.connection.cursor()
     medicos_cur.execute("SELECT id, CONCAT(nombre, ' ', ap, ' ', am) AS nombre_completo FROM medicos")
     lista_medicos = medicos_cur.fetchall()
-
     return render_template('editPaciente.html', listEPId=QueryEPId, enfermedades=lista_enfermedades, medicos=lista_medicos, rolMedico=RMED, idMedico=IDMED)
 
 @app.route('/updatePaciente/<id>', methods=['POST'])
@@ -337,14 +421,13 @@ def updatePaciente(id):
     flash('La información del paciente fue actualizada correctamente')
     return redirect(url_for('pacientes'))
 
-
 # Eliminar paciente
 @app.route('/delPaciente/<id>')
+@login_required
 def delPaciente(id):
     DPCS = mysql.connection.cursor()
     DPCS.execute('SELECT * FROM pacientes WHERE id = %s', (id,))
     QueryId = DPCS.fetchone()
-    print(QueryId)
     return render_template('deletePaciente.html', listIdDlt=QueryId)
 
 @app.route('/deletePaciente/<id>', methods=['POST'])
@@ -359,10 +442,11 @@ def deletePaciente(id):
             flash('Eliminación cancelada')
     return redirect(url_for('pacientes'))
 
-###########################################   PACIENTES   #####################################################
+###########################################  /PACIENTES  #####################################################
 
 ###########################################   EXPLORACIONES   #####################################################
 @app.route('/exploraciones')
+@login_required
 def exploraciones():
     CC=mysql.connection.cursor()
     if RMED==1:
@@ -373,6 +457,7 @@ def exploraciones():
     return render_template('showExploraciones.html',listExploraciones=conExploraciones, rolMedico=RMED, idMedico=IDMED)
 
 @app.route('/editExploraciones/<id>')
+@login_required
 def editExploraciones(id):
     EECS = mysql.connection.cursor()
     EECS.execute('SELECT * FROM Exploraciones WHERE id = %s', (id,))
@@ -404,6 +489,7 @@ def updateExploracion(id):
     return redirect(url_for('exploraciones'))
 
 @app.route('/addExploracion')
+@login_required
 def addExploracion():
     CP=mysql.connection.cursor()
     if RMED==2:
@@ -429,9 +515,12 @@ def guardarExploracion():
         mysql.connection.commit()
     flash('La exploración fue agregada correctamente')
     return redirect(url_for('exploraciones'))
+###########################################   /EXPLORACIONES   #####################################################
+
 
 ###########################################   Enfermedades   #####################################################
 @app.route('/addEnfermedades')
+@login_required
 def addEnfermedades():
     return render_template('addEnfermedades.html', rolMedico=RMED, idMedico=IDMED)
 
@@ -447,50 +536,30 @@ def guardarEnfermedad():
     flash('Enfermedad registrada exitosamente')
     return redirect(url_for('addEnfermedades'))
 
-###########################################   Enfermedades   #####################################################
+###########################################   /Enfermedades   #####################################################
 
 
+###########################################   Citas   #####################################################
 
-###########################################   ACCESO LOGIN   #####################################################
+@app.route('/citas')
+@login_required
+def citas():
+    CC=mysql.connection.cursor()
+    if RMED==1:
+        CC.execute('SELECT exploraciones.id, Pacientes.Nombre, Pacientes.ap, Pacientes.am, Exploraciones.fecha, FROM exploraciones inner join pacientes on exploraciones.paciente_id=pacientes.id where pacientes.medico_id= %s order by Exploraciones.fecha desc', (IDMED,))
+    else:
+        CC.execute('SELECT exploraciones.id, Pacientes.Nombre, Pacientes.ap, Pacientes.am, Exploraciones.fecha, medicos.nombre, medicos.ap, medicos.am FROM exploraciones inner join pacientes on exploraciones.paciente_id=pacientes.id inner join medicos on medicos.id=pacientes.medico_id order by Exploraciones.fecha desc')
+    conCitas=CC.fetchall()
+    return render_template('showCitas.html',listCitas=conCitas, rolMedico=RMED, idMedico=IDMED)
+
+###########################################   /Citas   #####################################################
+@app.route('/receta/<nombre_paciente>/<texto_receta>')
+def generar_receta(nombre_paciente, texto_receta):
+    # Obtener la ruta completa de la imagen del centro médico
+    imagen_centro_medico = app.root_path + '/static/imagenes/salud.png'
+    generar_pdf_receta(nombre_paciente, texto_receta, imagen_centro_medico)
+    return 'Receta generada correctamente.'
 
 
-@app.route('/acceso-login', methods= ["POST", "GET"])
-def login():
-   
-    if request.method == 'POST' and 'txtRfc' in request.form and 'txtPassword' in request.form:
-       
-        _rfc = request.form['txtRfc']
-        _password = request.form['txtPassword']
-
-        cur = mysql.connection.cursor()
-        cur.execute('SELECT id, rfc, pass FROM medicos WHERE rfc = %s AND pass = %s', (_rfc, _password,))
-        account = cur.fetchone()
-      
-        if account:
-            session['logueado'] = True
-            session['id'] = account[0]
-
-            cur2=mysql.connection.cursor()
-            cur2.execute('select rol_id from medicos inner join roles on medicos.rol_id=roles.id where medicos.id=%s', (session['id'],))
-            rol=cur2.fetchone()
-            rolMedico=rol[0]
-
-            global RMED
-            global IDMED
-            RMED=rol[0]
-            IDMED=session['id']
-
-            if rolMedico==2:
-                print ('Admin')
-            else:
-                print('Medico')
-
-            return redirect(url_for('medicos', rolMedico=RMED, idMedico=IDMED))
-        else:
-            flash('Usuario O Contraseña Incorrectas')
-            return render_template('login.html')
-###########################################   ACCESO LOGIN   #####################################################
-
-#ejecución del servidor en el puerto 5000
 if __name__ == '__main__':
     app.run(port=5000,debug=True)

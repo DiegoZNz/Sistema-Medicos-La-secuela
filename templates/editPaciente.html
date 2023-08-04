@@ -23,13 +23,18 @@
             </div>
             <div class="col-md-6">
                 <label for="inputEnfermedades" class="form-label">Enfermedades Crónicas</label>
-                <select id="inputEnfermedades" class="form-select" name="txtEnfermedades" required value="{{ listEPId[5] }}">
+                <select id="inputEnfermedades" class="form-select" name="txtEnfermedades" required>
                     <option value="">Seleccione una enfermedad</option>
                     {% for enfermedad in enfermedades %}
-                        <option value="{{ enfermedad[0] }}">{{ enfermedad[1] }}</option>
+                        {% if enfermedad[1] == listEPId[7] %}
+                            <option value="{{ enfermedad[0] }}" selected>{{ enfermedad[1] }}</option>
+                        {% else %}
+                            <option value="{{ enfermedad[0] }}">{{ enfermedad[1] }}</option>
+                        {% endif %}
                     {% endfor %}
-                </select>                
+                </select>
             </div>
+            
             <div class="col-md-6">
                 <label for="exampleFormControlTextarea2" class="form-label">Alergias</label>
                 <textarea class="form-control" name="txtalergias" rows="3" required placeholder="Ingresa las alergias del paciente" value="{{ listEPId[5] }}">{{ listEPId[5] }}</textarea>

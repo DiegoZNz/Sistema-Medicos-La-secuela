@@ -29,14 +29,22 @@
                 </div>
                 <div class="col-md-6">
                     <label for="inputPassword" class="form-label">Password</label>
-                    <input type="password" class="form-control" name="txtpass" placeholder="Ingresa una contraseña" required value="{{ listEMId[6] }}">
+                    <input type="password" class="form-control" name="txtpass" placeholder="Ingresa una contraseña" required value="{{ listEMId[7] }}">
                 </div>
+
+                <input type="hidden" name="pass_original" value="{{ listEMId[7] }}">
+                
 
                 <div class="col-md-2">
                     <label for="inputRol" class="form-label">Rol</label>
                     <select id="inputRol" class="form-select" name="txtrol" required>
-                        <option value="1" {% if listEMId[7] == 1 %}selected{% endif %}>Medico</option>
-                        <option value="2" {% if listEMId[7] == 2 %}selected{% endif %}>Medico Administrador</option>
+                        {% for rol in listRoles %}
+                            {% if rol[1] == listEMId[6] %}
+                                <option value="{{ rol[0] }}" selected>{{ rol[1] }}</option>
+                            {% else %}
+                                <option value="{{ rol[0] }}">{{ rol[1] }}</option>
+                            {% endif %}
+                        {% endfor %}
                     </select>
                 </div>
                 <div class="col-12">

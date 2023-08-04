@@ -1,6 +1,20 @@
 {% extends 'plantilla.html' %}
 
 {% block body %}
+
+    {% with mensajes = get_flashed_messages() %} 
+    {% if mensajes %} 
+        {% for msj in mensajes %}
+            <script>
+            Swal.fire({
+            text: '{{ msj }}',
+            icon: 'success',
+            confirmButtonText: 'Cool'
+            })
+            </script>
+        {% endfor %}
+    {% endif %} 
+    {% endwith %} 
     <div style="margin-top:1cm; text-align: center;">
         <table class="table  table-striped">
             <thead>
