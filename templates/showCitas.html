@@ -7,34 +7,30 @@
     <table class="table  table-striped">
         <thead>
             <tr>
-                <th scope="col">#</th>
                 <th scope="col">Nombre del paciente</th>
                 <th scope="col">Fecha</th>
+                {%if rolMedico==2 %}
+                    <th scope="col">Medico</th>
+                {% endif %}
                 <th scope="col">Acciones</th>
+                
             </tr>
         </thead>
         <tbody>
           {% for cit in listCitas %}
                 <tr>
-                    <td> {{cit.0}}</td>
-                    <td>{{cit.1}} {{cit.2}} {{cit.3}}</td>
-                    <td> {{cit.4}} </td>
-                    <td> {{cit.5}} </td>
-                    <td> {{cit.6}} </td>
-                    <td> {{cit.7}} </td>
-                    <td> {{cit.8}} </td>
-                    <td> {{cit.9}} </td>
-                    <td> {{cit.10}} </td>
-                    <td> {{cit.11}} </td>
+                    <td>{{cit.0}} {{cit.1}} {{cit.2}}</td>
+                    <td> {{cit.3}} </td>
+                    {%if rolMedico==2 %}
+                    <td>{{cit.4}} {{cit.5}} {{cit.6}}</td>
+                    {% endif %}
                     <td>
+                        <form action="/generate_pdf" method="GET">
                         <button class="btn btn-primary" type="submit">
-                            <a href="/editExploraciones/{{ exp[0] }}" class="text-light">Editar</a>
+                            Imprimir receta
                         </button>
-                        {%if rolMedico==2 %}
-                        <button class="btn btn-primary" type="submit">
-                            <a href="" class="text-light">Eliminar</a>
-                        </button>
-                        {% endif %}
+                        </form>
+                        
                     </td>
                 </tr>
             {% endfor %}

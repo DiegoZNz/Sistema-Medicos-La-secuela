@@ -546,19 +546,23 @@ def guardarEnfermedad():
 def citas():
     CC=mysql.connection.cursor()
     if RMED==1:
-        CC.execute('SELECT exploraciones.id, Pacientes.Nombre, Pacientes.ap, Pacientes.am, Exploraciones.fecha, FROM exploraciones inner join pacientes on exploraciones.paciente_id=pacientes.id where pacientes.medico_id= %s order by Exploraciones.fecha desc', (IDMED,))
+        CC.execute('select p.nombre, p.ap, p.am, e.fecha from exploraciones e inner join pacientes p on e.paciente_id = p.id where p.medico_id= %s', (IDMED,))
     else:
-        CC.execute('SELECT exploraciones.id, Pacientes.Nombre, Pacientes.ap, Pacientes.am, Exploraciones.fecha, medicos.nombre, medicos.ap, medicos.am FROM exploraciones inner join pacientes on exploraciones.paciente_id=pacientes.id inner join medicos on medicos.id=pacientes.medico_id order by Exploraciones.fecha desc')
+        CC.execute('select p.nombre, p.ap, p.am, e.fecha, m.nombre, m.ap, m.am from exploraciones e inner join pacientes p on e.paciente_id = p.id inner join medicos m on p.medico_id = m.id')
     conCitas=CC.fetchall()
     return render_template('showCitas.html',listCitas=conCitas, rolMedico=RMED, idMedico=IDMED)
 
 ###########################################   /Citas   #####################################################
-@app.route('/receta/<nombre_paciente>/<texto_receta>')
-def generar_receta(nombre_paciente, texto_receta):
-    # Obtener la ruta completa de la imagen del centro médico
-    imagen_centro_medico = app.root_path + '/static/imagenes/salud.png'
-    generar_pdf_receta(nombre_paciente, texto_receta, imagen_centro_medico)
-    return 'Receta generada correctamente.'
+
+###########################################   pdf   ######################################################
+
+
+
+
+
+
+
+###########################################   /pdf   #####################################################
 
 
 if __name__ == '__main__':
