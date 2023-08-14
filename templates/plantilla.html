@@ -9,7 +9,10 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <title>Sistema Medico</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
-</head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dash.css') }}">
+    
+  </head>
+
 <body>
     <nav class="navbar navbar-expand-lg navbar-indigo">
         <div class="container-fluid">
@@ -90,9 +93,6 @@
                 </ul>
               </li>
 
-              <li class="nav-item">
-                <a class="nav-link" href="/addEnfermedades">Enfermedades</a>
-              </li>
 
               <li class="nav-item">
                 <a class="nav-link" href="/logout">Cerrar sesión</a>

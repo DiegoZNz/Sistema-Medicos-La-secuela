@@ -2,7 +2,7 @@
 
 from flask import Flask,render_template,request,redirect,url_for,flash, after_this_request, send_file
 from flask_mysqldb import MySQL
-from PyPDF2 import PdfReader, PdfWriter
+#from PyPDF2 import PdfReader, PdfWriter
 import io, bcrypt
 from reportlab.lib.pagesizes import letter, landscape, A4, portrait
 from reportlab.pdfgen import canvas
@@ -79,7 +79,7 @@ def login():
             RMED=rol[0]
             IDMED=account[0]
 
-            return redirect(url_for('medicos', rolMedico=RMED, idMedico=IDMED))
+            return redirect(url_for('dash', rolMedico=RMED, idMedico=IDMED))
         else:
             flash('Usuario o Contraseña Incorrectas')
             return render_template('login.html')
@@ -96,8 +96,14 @@ def logout():
 
     logout_user()
     return redirect(url_for('index'))
+########################################DASHBOARD#####################################################
 
-  
+########################################DASHBOARD#####################################################
+@app.route('/dash')
+@login_required
+def dash():
+    return render_template('dash.html')
+
 ###########################################   MEDICOS   #####################################################
 @app.route('/addmedicos')
 @login_required
@@ -613,7 +619,7 @@ def guardarEnfermedad():
         CSGE.execute('INSERT INTO enfermedades ( nombre) VALUES (%s)', ( vnombre,))
         mysql.connection.commit()
     flash('Enfermedad registrada exitosamente')
-    return redirect(url_for('addEnfermedades'))
+    return redirect(url_for('addPacientes'))
 
 ###########################################   /Enfermedades   #####################################################
 
