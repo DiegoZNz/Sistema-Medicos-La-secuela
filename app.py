@@ -102,7 +102,7 @@ def logout():
 @app.route('/dash')
 @login_required
 def dash():
-    return render_template('dash.html')
+    return render_template('dash.html', rolMedico=RMED, idMedico=IDMED)
 
 ###########################################   MEDICOS   #####################################################
 @app.route('/addmedicos')
