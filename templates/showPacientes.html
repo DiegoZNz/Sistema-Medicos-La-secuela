@@ -15,7 +15,15 @@
     {% endif %} 
     {% endwith %} 
 
-    
+    <nav class="navbar bg-body-tertiary">
+        <div class="container-fluid">
+          <form class="d-flex" role="search" action="{{ url_for('filterPacientes') }}" method="POST">
+            <input class="form-control me-2" type="search" name="search_name" placeholder="buscar" aria-label="Search">
+            <button class="btn btn-outline-primary" type="submit"><i class="bi bi-search"></i></button>
+          </form>
+        </div>
+      </nav>
+      
     <div style="margin-top:1cm; text-align: center;">
         <table class="table  table-striped">
             <thead>

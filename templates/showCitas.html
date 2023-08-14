@@ -2,7 +2,23 @@
 {% extends 'plantilla.html' %}
 
 {% block body %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <form class="d-flex" method="POST" action="{{ url_for('citas_por_fecha') }}">
+                <div class="input-group">
+                    <label for="inputPaciente" class="input-group-text">Filtrar por fecha de citas</label>
+                    <input type="date" class="form-control" id="fecha_filtro" name="fecha_filtro" required>
+                    <button type="submit" class="btn btn-primary"> <i class="bi bi-search"></i> </button> 
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
+
+
+  
 <div style="margin-top:1cm; text-align: center;">
     <table class="table  table-striped">
         <thead>

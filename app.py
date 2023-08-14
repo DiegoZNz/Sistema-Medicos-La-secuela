@@ -503,6 +503,25 @@ def deletePaciente(id):
             flash('Eliminación cancelada')
     return redirect(url_for('pacientes'))
 
+# Filter patients by name
+@app.route('/filterPacientes', methods=['POST', 'GET'])
+@login_required
+def filterPacientes():
+    if request.method == 'POST':
+        search_name = request.form['search_name']
+        SPCS = mysql.connection.cursor()
+        
+        if RMED == 1:
+            SPCS.execute('SELECT pacientes.id, pacientes.nombre, pacientes.ap, pacientes.am, pacientes.birthdate, pacientes.alergias, pacientes.antecedentes, enfermedades.nombre, medicos.nombre, medicos.ap, medicos.am FROM pacientes INNER JOIN enfermedades ON enfermedades.id = pacientes.enfermedad_id INNER JOIN medicos ON pacientes.medico_id = medicos.id WHERE medicos.id = %s AND pacientes.nombre LIKE %s ORDER BY pacientes.nombre ASC', (IDMED, f"%{search_name}%"))
+        else:
+            SPCS.execute('SELECT pacientes.id, pacientes.nombre, pacientes.ap, pacientes.am, pacientes.birthdate, pacientes.alergias, pacientes.antecedentes, enfermedades.nombre, medicos.nombre, medicos.ap, medicos.am FROM pacientes INNER JOIN enfermedades ON enfermedades.id = pacientes.enfermedad_id INNER JOIN medicos ON pacientes.medico_id = medicos.id WHERE pacientes.nombre LIKE %s ORDER BY pacientes.nombre ASC', (f"%{search_name}%",))
+        
+        QueryPacientes = SPCS.fetchall()
+        return render_template('showPacientes.html', listPaciente=QueryPacientes, rolMedico=RMED, idMedico=IDMED)
+
+    return redirect(url_for('pacientes'))
+
+
 ###########################################  /PACIENTES  #####################################################
 
 ###########################################   EXPLORACIONES   #####################################################
@@ -662,6 +681,24 @@ def eliminarCitas():
 def deleteCitas():
     return redirect(url_for('eliminarCitas'))
 """
+
+
+@app.route('/citas_por_fecha', methods=['GET', 'POST'])
+@login_required
+def citas_por_fecha():
+    if request.method == 'POST':
+        fecha_filtro = request.form.get('fecha_filtro')  # Obtener la fecha ingresada en el formulario
+        CC = mysql.connection.cursor()
+        
+        if RMED == 1:
+            CC.execute('SELECT p.nombre, p.ap, p.am, e.fecha, e.id FROM exploraciones e INNER JOIN pacientes p ON e.paciente_id = p.id WHERE p.medico_id = %s AND e.fecha = %s', (IDMED, fecha_filtro))
+        else:
+            CC.execute('SELECT p.nombre, p.ap, p.am, e.fecha, e.id, m.nombre, m.ap, m.am FROM exploraciones e INNER JOIN pacientes p ON e.paciente_id = p.id INNER JOIN medicos m ON p.medico_id = m.id WHERE e.fecha = %s', (fecha_filtro,))
+        
+        conCitas = CC.fetchall()
+        return render_template('showCitas.html', listCitas=conCitas, rolMedico=RMED, idMedico=IDMED)
+    
+    return render_template('filtroCitas.html')  # Renderizar un formulario para ingresar la fecha de filtro
 
 ###########################################   /Citas   #####################################################
 
