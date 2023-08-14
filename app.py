@@ -1,9 +1,12 @@
 #---------------------------------------Necesario para funcionar----------------------------------------------------------------------------
 
-from flask import Flask,render_template,request,redirect,url_for,flash, session, after_this_request
+from flask import Flask,render_template,request,redirect,url_for,flash, after_this_request, send_file
 from flask_mysqldb import MySQL
-import bcrypt
-from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
+from PyPDF2 import PdfReader, PdfWriter
+import io, bcrypt
+from reportlab.lib.pagesizes import letter, landscape, A4, portrait
+from reportlab.pdfgen import canvas
+from flask_login import LoginManager, login_user, login_required, logout_user, UserMixin
 
 app = Flask(__name__, static_folder='static')
 app.config['MYSQL_HOST']='localhost'
@@ -622,9 +625,9 @@ def guardarEnfermedad():
 def citas():
     CC=mysql.connection.cursor()
     if RMED==1:
-        CC.execute('select p.nombre, p.ap, p.am, e.fecha from exploraciones e inner join pacientes p on e.paciente_id = p.id where p.medico_id= %s', (IDMED,))
+        CC.execute('select p.nombre, p.ap, p.am, e.fecha, e.id from exploraciones e inner join pacientes p on e.paciente_id = p.id where p.medico_id= %s', (IDMED,))
     else:
-        CC.execute('select p.nombre, p.ap, p.am, e.fecha, m.nombre, m.ap, m.am from exploraciones e inner join pacientes p on e.paciente_id = p.id inner join medicos m on p.medico_id = m.id')
+        CC.execute('select p.nombre, p.ap, p.am, e.fecha, e.id, m.nombre, m.ap, m.am from exploraciones e inner join pacientes p on e.paciente_id = p.id inner join medicos m on p.medico_id = m.id')
     conCitas=CC.fetchall()
     return render_template('showCitas.html',listCitas=conCitas, rolMedico=RMED, idMedico=IDMED)
 """
@@ -660,8 +663,116 @@ def deleteCitas():
 
 
 
+@app.route('/generar_pdf', methods=['POST'])
+def generar_pdf():
+    exploraciones = request.form.get('exp_id')
+    cur = mysql.connection.cursor()
+    cur.execute('select p.nombre, p.ap, p.am, e.fecha, e.peso, e.altura, e.temperatura, e.latidos, e.glucosa, e.oxigeno, d.tratamiento,d.medicamentos, d.indicaciones, m.nombre, m.ap, m.am, m.cedula, p.alergias from exploraciones e inner join pacientes p on e.paciente_id = p.id inner join diagnosticos d on e.id = d.expediente_id inner join medicos m on p.medico_id = m.id where e.id = %s ',(exploraciones,))
+    data = cur.fetchall()
+    cur.close()
+
+    pdf_filename = generar_reporte_pdf(data)
+
+    return send_file(pdf_filename, as_attachment=True)
 
 
+def mm_to_points(mm):
+    return mm / 0.3527
+
+
+
+def draw_text_with_word_wrap(c, x, y, text, max_width, line_height):
+    lines = []
+    words = text.split()
+    current_line = ""
+    
+    for word in words:
+        test_line = current_line + " " + word if current_line else word
+        test_width = c.stringWidth(test_line, "Times-Roman", 15)
+        
+        if test_width <= max_width:
+            current_line = test_line
+        else:
+            lines.append(current_line)
+            current_line = word
+    
+    lines.append(current_line)
+    
+    for line in lines:
+        c.drawString(x, y, line)
+        y -= line_height
+        
+        
+
+def generar_reporte_pdf(data):
+    template_path = "static/template.pdf"
+    pdf_filename = "receta_medica.pdf"
+    
+    packet = io.BytesIO()
+    # Create a new PDF with reportlab
+    c = canvas.Canvas(packet, pagesize=portrait((1000*mm_to_points(1), 1000*mm_to_points(1))))  # Tamaño personalizado en puntos
+    c.setFont("Times-Roman", 15)
+
+    c.drawString(980, 650, f"Fecha: {data[0][3]}")
+
+    paciente_info = f"{data[0][0]} {data[0][1]} {data[0][2]}"
+    c.drawString(70, 650, 'PACIENTE:')
+    c.drawString(150, 650, paciente_info)
+    
+    doc_info = f"{data[0][13]} {data[0][14]} {data[0][15]}"
+    c.drawString(950, 750, 'Dr.')
+    c.drawString(975, 750, doc_info)
+    
+    c.drawString(950, 700, f"Cedula: {data[0][16]}")
+    
+
+    c.drawString(70, 580, 'EXPLORACION:')
+    y_position = 550
+    exploracion_labels = [
+        "Peso (Kg):", "Altura (M):", "Temp (C):", "Latidos:", "Glucosa:", "SATO2:"
+    ]
+    exploracion_data = data[0][4:10]
+    for label, value in zip(exploracion_labels, exploracion_data):
+        c.drawString(70, y_position, label)
+        c.drawString(150, y_position, str(value))
+        y_position -= 25
+    
+    c.drawString(70, y_position - 20, 'Alergias:')
+    c.drawString(70, y_position - 40, data[0][17])
+        
+        
+    max_text_width = 700  # Establece el ancho máximo para el texto
+    # Dibujar el tratamiento, medicamentos e indicaciones con ajuste de línea
+    c.drawString(595.98, 580, 'Tratamiento:')
+    draw_text_with_word_wrap(c, 280, 580 - 20, data[0][10], max_text_width, 20)
+
+    c.drawString(595.98, 500, 'Medicamentos:')
+    draw_text_with_word_wrap(c, 280, 500 - 40, data[0][11], max_text_width, 20)
+    
+    c.drawString(595.98, 420.69, 'Indicaciones:')
+    draw_text_with_word_wrap(c, 280, 420 - 40, data[0][12], max_text_width, 20)
+
+    c.save()
+    
+    # Move to the beginning of the packet
+    packet.seek(0)
+    
+    # Create a PyPDF2 reader object from the existing template PDF
+    existing_pdf = PdfReader(template_path)
+    
+    # Create a new PDF writer
+    pdf_writer = PdfWriter()
+    
+    # Add the content from the packet to the new PDF
+    new_pdf = PdfReader(packet)
+    pdf_writer.add_page(existing_pdf.pages[0])
+    pdf_writer.pages[0].merge_page(new_pdf.pages[0])
+    
+    # Save the result to the output PDF
+    with open(pdf_filename, "wb") as output_pdf:
+        pdf_writer.write(output_pdf)
+    
+    return pdf_filename
 
 
 ###########################################   /pdf   #####################################################

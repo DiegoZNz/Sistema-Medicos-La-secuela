@@ -22,13 +22,12 @@
                     <td>{{cit.0}} {{cit.1}} {{cit.2}}</td>
                     <td> {{cit.3}} </td>
                     {%if rolMedico==2 %}
-                    <td>{{cit.4}} {{cit.5}} {{cit.6}}</td>
+                    <td>{{cit.5}} {{cit.6}} {{cit.7}}</td>
                     {% endif %}
                     <td>
-                        <form action="/generate_pdf" method="GET">
-                        <button class="btn btn-primary" type="submit">
-                            Imprimir receta
-                        </button>
+                        <form method="POST" action="{{ url_for('generar_pdf') }}">
+                            <input type="hidden" name="exp_id" value="{{ cit.4 }}">
+                            <button type="submit">Generar PDF</button>
                         </form>
 <!--
                         <button class="btn btn-primary" type="submit">
