@@ -17,7 +17,7 @@
                 <div class="col-md-6">
                     <label for="inputExpediente" class="form-label">Expediente</label>
                     <select id="inputExpediente" class="form-select" name="txtexpediente" required>
-                        <option value="">Seleccione un paciente primero</option>
+                        <option value="">Seleccione un expediente primero</option>
                         {% for exploracion in exploraciones %}
                         <option value="{{ exploracion[0] }}">{{ exploracion[0] }}</option>
                         {% endfor %}

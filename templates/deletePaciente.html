@@ -4,7 +4,7 @@
 
 <div class="wrapper" style="margin-top: 2cm; margin-left: 1cm; margin-right: 1cm;">
     <div class="content">
-        <form class="row g-3" method="post" action="/deletePaciente/{{listIdDlt[0]}}>
+        <form class="row g-3" method="post" action="/deletePaciente/{{listIdDlt[0]}}">
             <div class="col-md-4">
                 <label for="inputName" class="form-label">Nombre</label>
                 <input type="text" class="form-control" name="txtnombre" placeholder="Ingresa el nombre" required disabled value="{{listIdDlt[1]}}">
@@ -49,7 +49,7 @@
                 </select>
             </div>
             <div class="col-12">
-                <button type="submit" class="btn btn-primary mt-4" name="action" value="delete">Eliminar</button>
+                <button type="submit" class="btn btn-primary" name="action" value="delete">Eliminar</button>
                 <button type="submit" class="btn btn-primary" name="action" value="cancel">Cancelar</button>
             </div>
         </form>

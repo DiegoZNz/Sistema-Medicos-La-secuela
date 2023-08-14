@@ -23,15 +23,28 @@
                     <th scope="col">Paciente</th>
                     <th scope="col">Estudio medico</th>
                     <th scope="col">Descripción</th>
+                    <th scope="col">Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 {% for estudios in listEstudios %}
                     <tr>
                         <td>{{ estudios[0] }}</td>
-                        <td>{{ estudios[1] }}</td>
+                        <td>{{ estudios[5]}} {{estudios[6]}} {{estudios[7]}}</td>
                         <td>{{ estudios[2] }}</td>
                         <td>{{ estudios[3] }}</td>
+                        <td>
+                            <button class="btn btn-primary" type="submit">
+                                <a href="/editEstudio/{{ estudios[0] }}" class="text-light">Editar</a>
+                            </button>
+
+                            {%if rolMedico==2 %}
+                            <button class="btn btn-primary" type="submit">
+                                <a href="/borrarEstudio/{{estudios[0]}}" class="text-light">Eliminar</a>
+                            </button>
+                            {% endif %}
+
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>

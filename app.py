@@ -4,7 +4,6 @@ from flask import Flask,render_template,request,redirect,url_for,flash, session,
 from flask_mysqldb import MySQL
 import bcrypt
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
-from pdf_utils import generar_pdf_receta
 
 app = Flask(__name__, static_folder='static')
 app.config['MYSQL_HOST']='localhost'
@@ -233,7 +232,7 @@ def guardarDiagnostico():
         CSGD.execute('INSERT INTO diagnosticos (paciente_id, expediente_id, sintomas, tratamiento, medicamentos, indicaciones) VALUES (%s, %s, %s, %s, %s, %s)', (vpaciente, vexpediente, vsintomas, vtratamiento, vmedicamentos, vindicaciones))
         mysql.connection.commit()
     flash('El diagnóstico fue agregado correctamente')
-    return redirect(url_for('addDiagnostico'))
+    return redirect(url_for('diagnosticos'))
 
 # Mostrar lista de diagnósticos
 @app.route('/diagnosticos')
@@ -259,14 +258,13 @@ def editDiagnostico(id):
 @app.route('/updateDiagnostico/<id>', methods=['POST'])
 def updateDiagnostico(id):
     if request.method == 'POST':
-        Vpaciente = request.form['txtpaciente']
-        Vexpediente = request.form['txtexpediente']
+
         Vsintomas = request.form['txtsintomas']
         Vtratamiento = request.form['txttratamiento']
         Vmedicamentos = request.form['txtmedicamentos']
         Vindicaciones = request.form['txtindicaciones']
         UpdDCur = mysql.connection.cursor()
-        UpdDCur.execute('UPDATE diagnosticos SET paciente_id = %s, expediente_id = %s, sintomas = %s, tratamiento = %s, medicamentos = %s, indicaciones = %s WHERE id = %s', (Vpaciente, Vexpediente, Vsintomas, Vtratamiento, Vmedicamentos, Vindicaciones, id))
+        UpdDCur.execute('UPDATE diagnosticos SET sintomas = %s, tratamiento = %s, medicamentos = %s, indicaciones = %s WHERE id = %s', ( Vsintomas, Vtratamiento, Vmedicamentos, Vindicaciones, id))
         mysql.connection.commit()
     flash('La información del diagnóstico fue actualizada correctamente')
     return redirect(url_for('diagnosticos'))
@@ -295,6 +293,60 @@ def deleteDiagnostico(id):
 ###########################################   /DIAGNOSTICOS   #####################################################
 
 ###########################################   ESTUDIOS   #####################################################
+
+
+@app.route('/borrarEstudio/<id>')
+@login_required
+def borrarEstudio(id):
+    EDCS = mysql.connection.cursor()
+    EDCS.execute('SELECT * FROM estudios inner join pacientes on pacientes.id=estudios.paciente_id WHERE estudios.id = %s', (id,))
+    QueryEDId = EDCS.fetchone()
+
+    CP = mysql.connection.cursor()
+    CP.execute('SELECT * FROM pacientes where medico_id=%s', (IDMED,))
+    NomPacientes=CP.fetchall()
+
+    return render_template('deleteEstudio.html', rolMedico=RMED, idMedico=IDMED, estudio=QueryEDId, Nombres=NomPacientes)
+
+@app.route('/deleteEstudio/<id>')
+@login_required
+def deleteEstudio(id):
+    DelCur = mysql.connection.cursor()
+    DelCur.execute('DELETE FROM estudios WHERE id = %s', (id,))
+    mysql.connection.commit()
+    flash('El diagnóstico fue eliminado correctamente')
+    return redirect(url_for('estudios'))
+
+@app.route('/editEstudio/<id>')
+@login_required
+def editEstudio(id):
+    EDCS = mysql.connection.cursor()
+    EDCS.execute('SELECT * FROM estudios inner join pacientes on pacientes.id=estudios.paciente_id WHERE estudios.id = %s', (id,))
+    QueryEDId = EDCS.fetchone()
+
+    CP = mysql.connection.cursor()
+    CP.execute('SELECT * FROM pacientes where medico_id=%s', (IDMED,))
+    NomPacientes=CP.fetchall()
+
+    return render_template('editEstudio.html', rolMedico=RMED, idMedico=IDMED, estudio=QueryEDId, Nombres=NomPacientes)
+
+
+@app.route('/updateEstudio/<id>', methods=['POST'])
+@login_required
+def updateEstudio(id):
+
+    if request.method == 'POST':
+
+        Vpaciente = request.form['txtpaciente']
+        Vestudiomedico = request.form['txtEstudioMedico']
+        Vdescripcion = request.form['txtDescripcion']
+        UpdDCur = mysql.connection.cursor()
+        UpdDCur.execute('UPDATE estudios SET paciente_id = %s, nombre = %s, descripcion = %s WHERE id = %s', ( Vpaciente, Vestudiomedico, Vdescripcion, id))
+        mysql.connection.commit()
+    flash('La información del estudio fue actualizada correctamente')
+
+    return redirect(url_for('estudios'))
+
 @app.route('/addEstudio')
 @login_required
 def addEstudio():
@@ -326,7 +378,7 @@ def guardarEstudio():
 @login_required
 def estudios():
     SECS = mysql.connection.cursor()
-    SECS.execute("SELECT * FROM estudios")
+    SECS.execute("SELECT * FROM estudios inner join pacientes on estudios.paciente_id=pacientes.id")
     QueryEstudios = SECS.fetchall()
     return render_template('showEstudio.html', listEstudios=QueryEstudios, rolMedico=RMED, idMedico=IDMED)
 
@@ -471,6 +523,30 @@ def editExploraciones(id):
     NomPacientes=CP.fetchall()
     return render_template('editExploraciones.html', Nombres=NomPacientes,exploracion=QueryEPId, rolMedico=RMED, idMedico=IDMED)
 
+@app.route('/borrarExploraciones/<id>')
+@login_required
+def borrarExploraciones(id):
+    EECS = mysql.connection.cursor()
+    EECS.execute('SELECT * FROM Exploraciones WHERE id = %s', (id,))
+    QueryEPId = EECS.fetchone()
+
+    CP=mysql.connection.cursor()
+    if RMED==2:
+        CP.execute('SELECT id, nombre, ap, am from pacientes')
+    else:
+        CP.execute('SELECT id, nombre, ap, am from pacientes where medico_id=%s', (IDMED,))
+    NomPacientes=CP.fetchall()
+    return render_template('deleteExploraciones.html', Nombres=NomPacientes,exploracion=QueryEPId, rolMedico=RMED, idMedico=IDMED)
+
+@app.route('/deleteExploraciones/<id>')
+@login_required
+def deleteExploraciones(id):
+    DelCur = mysql.connection.cursor()
+    DelCur.execute('DELETE FROM exploraciones WHERE id = %s', (id,))
+    mysql.connection.commit()
+    flash('La exploracion fue eliminada correctamente')
+    return redirect(url_for('exploraciones'))
+
 @app.route('/updateExploracion/<id>', methods=['POST'])
 def updateExploracion(id):
     if request.method == 'POST':
@@ -551,6 +627,32 @@ def citas():
         CC.execute('select p.nombre, p.ap, p.am, e.fecha, m.nombre, m.ap, m.am from exploraciones e inner join pacientes p on e.paciente_id = p.id inner join medicos m on p.medico_id = m.id')
     conCitas=CC.fetchall()
     return render_template('showCitas.html',listCitas=conCitas, rolMedico=RMED, idMedico=IDMED)
+"""
+@app.route('/editCitas', methods=['POST'])
+@login_required
+def editCitas():
+
+    CC=mysql.connection.cursor()
+    CC.execute('select * from exploraciones where ')
+
+
+    return render_template('editCitas.html', rolMedico=RMED, idMedico=IDMED)
+
+@app.route('/updateCitas')
+@login_required
+def updateCitas():
+    return redirect(url_for('editCitas'))
+
+@app.route('/eliminarCitas')
+@login_required
+def eliminarCitas():
+    return render_template('deleteCitas.html', rolMedico=RMED, idMedico=IDMED)
+
+@app.route('/deleteCitas')
+@login_required
+def deleteCitas():
+    return redirect(url_for('eliminarCitas'))
+"""
 
 ###########################################   /Citas   #####################################################
 
