@@ -2,7 +2,7 @@
 
 from flask import Flask,render_template,request,redirect,url_for,flash, after_this_request, send_file
 from flask_mysqldb import MySQL
-#from PyPDF2 import PdfReader, PdfWriter
+from PyPDF2 import PdfReader, PdfWriter
 import io, bcrypt
 from reportlab.lib.pagesizes import letter, landscape, A4, portrait
 from reportlab.pdfgen import canvas
